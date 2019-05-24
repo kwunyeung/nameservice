@@ -24,14 +24,14 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		case QueryWhois:
 			return queryWhois(ctx, path[1:], req, keeper)
 		case QueryNames:
-			return queryNames(ctc, req, keeper)
+			return queryNames(ctx, req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown nameservice query endpoint")
 		}
 	}
 }
 
-func queryResolve(ctx sdk.Context, path []string, req abci.ReqeustQuery, keeper Keeper) (res []byte, err sdk.Error) {
+func queryResolve(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	name := path[0]
 	value := keeper.ResolveName(ctx, name)
 	if value == "" {
@@ -72,7 +72,7 @@ Value: %s
 Price %s`, w.Owner, w.Value, w.Price))
 }
 
-func queryNames(ctx sdk.Context, req abci.ReqeustQuery, keeper Keeper) (res []byte, err sdk.Error) {
+func queryNames(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var namesList QueryResNames
 
 	iterator := keeper.GetNamesIterator(ctx)

@@ -41,7 +41,7 @@ func resolveNameHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName s
 }
 
 func whoIsHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) http.HandlerFunc {
-	return func(w http.ResponseWrite, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		paramType := vars[restName]
 
@@ -55,7 +55,7 @@ func whoIsHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string)
 	}
 }
 
-func nameHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) http.HanderFunc {
+func nameHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData(fmt.Sprintf("cutsom/%s/names", storeName), nil)
 		if err != nil {
@@ -74,7 +74,7 @@ type buyNameReq struct {
 	Buyer   string       `json:"buyer"`
 }
 
-func buyNameHander(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func buyNameHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req buyNameReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {
@@ -106,7 +106,7 @@ func buyNameHander(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseRqe, []sdk.Msg{msg})
+		clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }
 
@@ -117,7 +117,7 @@ type setNameReq struct {
 	Owner   string       `json:"owner"`
 }
 
-func setNamehandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func setNameHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req setNameReq
 		if !rest.ReadRESTReq(w, r, cdc, &req) {

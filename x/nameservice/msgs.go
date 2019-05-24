@@ -85,6 +85,6 @@ func (msg MsgBuyName) GetSignBytes() []byte {
 	return sdk.MustSortJSON(b)
 }
 
-func (msg MsgBuyName) GetSingers() []sdk.AccAddress {
+func (msg MsgBuyName) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Buyer}
 }

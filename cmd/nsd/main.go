@@ -27,8 +27,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	cfg "github.com/tendermint/tendermint/config"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	tmtypes "github.com/tendermint/tendermint/types")
-
+	tmtypes "github.com/tendermint/tendermint/types"
+)
 
 var DefaultNodeHome = os.ExpandEnv("$HOME/.nsd")
 
@@ -39,17 +39,17 @@ const (
 func main() {
 	cobra.EnableCommandSorting = false
 
-	cdc := app.MakeCoded()
+	cdc := app.MakeCodec()
 	ctx := server.NewDefaultContext()
 
-	rootCmd := &cobra.Command {
-		Use: 	"nsd"
-		Short:	"nameservice App Daemon (server)",
-		PersistenPreRunE: server.PersistentPreRunEFn(ctx),
+	rootCmd := &cobra.Command{
+		Use:               "nsd",
+		Short:             "nameservice App Daemon (server)",
+		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
 	rootCmd.AddCommand(InitCmd(ctx, cdc))
-	rootCmd.AddCommand(AddGenesisAccountCmd(ctx, cdc)())
+	rootCmd.AddCommand(AddGenesisAccountCmd(ctx, cdc))
 	server.AddCommands(ctx, cdc, rootCmd, newApp, appExporter())
 
 	executor := cli.PrepareBaseCmd(rootCmd, "NS", DefaultNodeHome)
@@ -66,19 +66,19 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 func appExporter() server.AppExporter {
 	return func(logger log.Logger, db dbm.DB, _ io.Writer, _ int64, _ bool, _ []string) (
 		json.RawMessage, []tmtypes.GenesisValidator, error) {
-			dapp := app.NewNameServiceApp(logger, db)
-			return dapp.ExportAppStateAndValidators()
-		}
+		dapp := app.NewNameServiceApp(logger, db)
+		return dapp.ExportAppStateAndValidators()
+	}
 }
 
 func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "init",
-		Short:	"Initialized genesis config, priv-validator file, and p2p-node file",
-		Args: 	cobra.NoArgs,
-		RunE:	func(_ *cobra.Command, _ []string) error {
+		Use:   "init",
+		Short: "Initialized genesis config, priv-validator file, and p2p-node file",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
-			config.SetRoot(viper.GetString(cliHomeFlag))
+			config.SetRoot(viper.GetString(cli.HomeFlag))
 
 			chainID := viper.GetString(client.FlagChainID)
 			if chainID == "" {
@@ -102,7 +102,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				BankData: bank.DefaultGenesisState(),
 			}
 
-			appState, err = codec.MarshalJSONIndent((cdc, genesis))
+			appState, err = codec.MarshalJSONIndent(cdc, genesis)
 			if err != nil {
 				return err
 			}
@@ -120,29 +120,29 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 
 			fmt.Printf("Initialized nsd configuration and bootstrapping files in %s...n", viper.GetString(cli.HomeFlag))
 			return nil
-		}
+		},
 	}
 
 	cmd.Flags().String(cli.HomeFlag, DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().BoolP(flagOverwrite, "o", flase, "overwrite the genesis.json file")
+	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 
 	return cmd
 }
 
-func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command{
+func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:	"add-genesis-account [address] [coins[,coins]]",
-		Short:	"Adds an account to the genesis file",
-		Args:	cobra.ExactArgs(2),
-		Long:	strings.TrimSpace(`
+		Use:   "add-genesis-account [address] [coins[,coins]]",
+		Short: "Adds an account to the genesis file",
+		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(`
 Adds accounts to the genesis file so that you can start a chain with coins in theCLI:
 
 $ nsd add-genesis-account cosmos1tse7r2fadvlrrgau3pa0ss7cqh55wrv6y9alwh 1000STAKE,1000nametoken
 `),
-		RunE:	func(_ *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			coins, err := sdk.ParseCoins(args[1])
@@ -157,13 +157,18 @@ $ nsd add-genesis-account cosmos1tse7r2fadvlrrgau3pa0ss7cqh55wrv6y9alwh 1000STAK
 			if !common.FileExists(genFile) {
 				return fmt.Errorf("%s does not exist, run `nsd init` first", genFile)
 			}
-			
+
 			genContents, err := ioutil.ReadFile(genFile)
-			if err != nil{
+			if err != nil {
 				return fmt.Errorf("Failed to read genesis file: %s", err.Error())
 			}
 
 			if err = cdc.UnmarshalJSON(genContents, &genDoc); err != nil {
+				return err
+			}
+
+			var appState app.GenesisState
+			if err = cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
 				return err
 			}
 
@@ -189,7 +194,7 @@ $ nsd add-genesis-account cosmos1tse7r2fadvlrrgau3pa0ss7cqh55wrv6y9alwh 1000STAK
 
 func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-	
+
 	addr, secret, err := server.GenerateCoinKey()
 	if err != nil {
 		return
@@ -215,7 +220,7 @@ func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (
 
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,
-		Power: 10,
+		Power:  10,
 	}
 
 	return

@@ -11,9 +11,9 @@ import (
 
 func GetCmdResolveName(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:	"resolve [name]",
-		Short:	"resolve name",
-		Args:	cobra.ExactArgs(1),
+		Use:   "resolve [name]",
+		Short: "resolve name",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			name := args[0]
@@ -33,10 +33,10 @@ func GetCmdResolveName(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdWhois(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:	"whois [name]",
-		Short:	"Query whois info of name",
-		Args:	cobra.ExactArgs(1),
-		RunE:	func(cmd *cobra.Command, args []string) error {
+		Use:   "whois [name]",
+		Short: "Query whois info of name",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			name := args[0]
 
@@ -49,15 +49,15 @@ func GetCmdWhois(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			var out nameservice.Whois
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
-		}
+		},
 	}
 }
 
 func GetCmdNames(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command {
-		Use:	"names",
-		Short:	"names",
-		RunE:	func(cmd *cobra.Command, args []string) error {
+	return &cobra.Command{
+		Use:   "names",
+		Short: "names",
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/names", queryRoute), nil)
 			if err != nil {
@@ -68,6 +68,6 @@ func GetCmdNames(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			var out nameservice.QueryResNames
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
-		}
+		},
 	}
 }
